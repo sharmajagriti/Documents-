@@ -1,0 +1,107 @@
+Disaster recovery
+What is disaster recovery?
+Disaster recovery is the process of preparing for and recovering from a disruptive event.
+In general term we can called as BCP (Business continuity plan) or EDR
+Disaster recovery is the process of preparing for and recovering from a disaster. An event that prevents a workload or system from fulfilling its business objectives in its primary deployed location is considered a disaster. 
+This paper outlines the best practices for planning and testing disaster recovery for any workload deployed to AWS, and offers different approaches to mitigate risks and meet the Recovery Time Objective (RTO) and Recovery Point Objective (RPO) for that workload.
+
+Why disaster recovery?
+Direct and indirect financial loss
+Reputational damage
+Failure to abide by compliance standards.
+
+Part of disaster recovery planning: we need to define an RTO and RPO for each application based on impact analysis and risk assessment.
+What is RTO and RPO:
+RTO (Recovery Time Objectives): (Nothing but Downtime)
+Maximum acceptable delay between the interruption of an application and the restoration of its service. This objective determines what is considered an acceptable time window for an application to be unavailable.
+RPO (Recovery Point Objectives): Nothing but Data loss
+Maximum acceptable gap between the data in the disaster recovery site and the latest data stored in the application when the disaster strikes. This objective determines what is considered the maximum amount of time acceptable for interruption/loss of data that can be caused by a disaster.
+
+
+Type of Disaster recovery strategies:
+•	Backup and restore.
+•	Pilot light.
+•	Warm standby.
+•	Multi-site active/active.
+Backup and restore:
+•	Lower Priority use cases
+•	Provision all aws resources after event.
+•	Restore backups after event.
+•	Cost is less.
+•	RTP&RPO in Hours
+Pilot light:
+•	Data live
+•	Services idel
+•	Provision some aws resources and scale after event.
+•	Cost: Bit expensive when compared to Backup & restore.
+•	RTO&RPO 10 mins
+Warm standby:
+•	Always running, but smaller
+•	Business Critical
+•	Scale AWS resources after event.
+•	Cost: Bit expensive when compared to Backup & Restore and Pilot light.
+•	RTP&TPO in mins
+Multi-site active/active:
+•	Zero downtime
+•	Near zero data loss.
+•	Mission Critical services
+•	Cost: expensive when compared to Backup & Restore, Pilot light and Warm standby.
+•	RTP&TPO Live Data
+
+
+
+
+Regions are supported by AWS Elastic Disaster Recovery:
+ 
+ 
+ 
+ 
+
+
+
+In Order to implement DR setup need to setup the below things
+•	To Create a backup every 4hrs schedule
+•	Copy the snapshot backup fom source region to DR region
+•	Restoring the backup
+•	Cleanup the ols backups every week
+
+About Business continuity.
+Large scale, less frequent, events:
+•	Natural disastes
+•	Technical failures
+•	Human actions
+Measures a one-time event:
+•	Recovery Time
+•	Recovery point.
+
+Create S3 for CRR
+Create two buckets in two regions.
+Once created open the Source bucket and click on Management tab. 
+In the Management tab go down you can see Replication rules click on Create replication rule.
+ 
+Scroll down and we can see replication.
+ 
+
+Once we click on the create replication rule, it will route to a new page. If we don't enable the bucket version, it will pop up to enable the bucket version.
+
+Add the Replication Rule name, and the status should be enabled. 
+The next field is the source bucket.
+In the Choose a Rule scope, there are two options. We need to select Apply to all objects in the bucket; if any object is uploaded, it will reflect in the destination bucket.
+ 
+
+The next field is the Destination bucket.
+In terms of destination, there are two options. Choose a bucket in this account or specify a bucket in another account. In this one, we need to select based on the requirement whether we need to replicate the date in the same account or in different accounts.
+Click on browse, and then select the bucket name.
+ 
+In the IAM role field.
+Select the create new role or if we wont to go with existing IAM role.
+ 
+If we want to go with Encryption check the box.
+ 
+
+
+Destination storage class:
+In the Destination storage class enable the check box, it will list out the storage classes to replicate the objects.
+ 
+If we need to do with any additional replication options, we need to enable or check box them and click on Save.
+ 
