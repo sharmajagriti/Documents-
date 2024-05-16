@@ -1,0 +1,416 @@
+	
+ 
+	
+
+
+
+Statement of Confidentiality
+
+The information contained in this document is confidential to Trianz. It shall not be disclosed, duplicated, or used for any purpose other than that stated herein, in whole or in part, without the express written consent of Trianz.
+
+
+
+
+Document Control
+
+
+Owner	Ashok Kilaru	Release ID	Initial Release
+Effective Date	1/12/2023	Version	1
+
+
+
+
+
+
+Document History
+
+Version	Date	Details
+1	1/12/2023	
+		
+		
+		
+
+	
+ 
+Table of Contents
+GLOSSARY	3
+1.	EXECUTIVE SUMMARY	4
+ABOUT THIS DOCUMENT	4
+ABOUT TRIANZ	4
+2.	OTHER SECTIONS	4
+
+1.Pre-Requisites	
+2.Configuration for MGN	
+  2.1 Initialize MGN	
+  2.2 Set Up Application Migration Service	
+
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+1.	Executive Summary
+
+About this document
+
+MGN is one of the services in AWS (Amazon Web Services) which is used for migrating EC2 from one account to another account in cross region as well.
+
+Application Migration Service simplifies, expedites, and reduces the cost of migrating and modernizing applications.
+
+
+About Trianz
+
+Welcome to Trianz Digital Consulting Pvt. Ltd., also referred to as Trianz. Trianz is a unique place to work is the set of values that we bring to our client-facing efforts and the way in ,which we interact with our teammates. Our values and culture are what set us apart from our competitors. We work at a fast pace, do whatever it takes to build a successful IT Services and consulting firm, and deliver on our client commitments. Amidst all this activity, it can be easy to lose track of our foundation - our Company’s core values. To ensure that we remain focused, we must pause periodically to examine our values from time to time. 
+Trianz is a digital transformation technology & services firm that helps clients transform their value proposition and business value chain. We do help clients understand their competitive digital maturity, develop effective strategies, and transform with our IP/platforms and technology services.
+Our Approach is Unique, we lead with data and IP that accelerates digital transformations, optimizes investments and delivers measurable results. We have been rated #1 for ‘transformational impact’ and ‘predictability of execution’ by a Fortune 1000 client base- 5 years in a row.
+ 
+AWS MGN (Application Migration Service)
+
+Project Name	Project Manager
+Migration POC	Ashok Kilaru
+Client	Duration
+GE Healthcare	December 2023
+
+Executive Summary	Replicate the source server with lift and shift to another AWS region of choice .After the data has been copied over, test your website on the newly launched target server, if testing is successful then perform a server cutover.
+
+
+Mission Statement	AWS Application Migration Service minimizes time-intensive, error-prone manual processes by automating the conversion of your source servers to run natively on AWS. It also simplifies application modernization with built-in and custom optimization options.
+
+
+
+
+1.Pre-Requisites:
+o	It requires ports TCP 443 and 1500 to be open.
+o	Outbound traffic needs to be allowed towards MGN endpoints of the respective region. 
+o	MGN service must be configured in the target region. 
+
+              Windows Installation on source server: 
+o	2GB free space is required for the AWS MGN agent installation. 
+o	300 MB of free RAM 
+o	Dot-Net Framework 
+
+o	Linux Installation on source server: 
+o	Python 2 (2.4 or above), Python 3 (3.0 or above) 
+o	On Target side we need to have AWS MGN service initialized 
+o	On Target side IAM user needs to be created with required Role 
+o	The Application Migration Service user needs to be root user, or a user is sudoers list 
+o	Ensure dhclient package is installed, if not install using the below commands: 
+o	yum install dhclient 
+o	Ensure 2 GB of free space is available in /tmp directory during the installation only 
+ 
+
+2. Configuration for MGN
+2.1	Initialize AWS MGN: 
+
+              Navigate to AWS MGN > Getting Started > Set up Application Migration Service. 
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+2.2 Set Up Application Migration Service
+
+
+ 
+
+
+
+  2.3 Create Template
+ 
+
+2.4 Creating the required AWS credential. 
+Goto IAM > Users > Add User 
+ 
+                                                                                                                                                               
+
+
+Provide Username < *******>  
+
+ 
+
+
+
+
+ 
+ 
+Choose the existing IAM policy which is AWSApplicationMigrationAgentPolicy from the list of policies.
+ 
+
+  
+ 
+  
+  
+ 
+
+
+ 
+ 
+
+
+
+ 
+
+
+ 
+3.Install Replication agent on source server. 
+
+Login to the source server and download the agent installer on the source server and run the command showing up in the console. 
+
+  
+
+ 
+  
+ 
+  
+ 
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+Once the installation is completed, we can check the status on the Source server tab of AWS MGN 
+
+ 
+During this stage, a connection gets established between the source server and Replication server for the replication to happen. Below is the sequence of stages shown in upcoming screenshots.
+
+ 
+ 
+ 
+ 
+ 
+ 
+  
+ 
+ 
+
+
+
+AWS MGN Replication server shows up in EC2 console 
+
+ 
+
+Navigate to Application Migration service > Source Server > Select Source Server created and under Test and Cutover > Click on Launch Test Instance
+
+
+ 
+ 
+
+
+
+
+We can see the replication progress from the console directly as seen in the screenshots below
+
+  
+ 
+  
+ 
+  
+ 
+  Once the testing is successfully completed, mark it as “Ready for Cutover” under Test and Cutover.
+ 
+  
+  
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Once we are ready for cutover, click Launch Cutover Instance under Test and Cutover as shown below
+
+  
+  
+  
+  
+ 
+
+
+  
+  
+
+Once the cutover is finalized and the Data replication is successfully completed as shown below, then we are ready to Finalize the cutover under Test and Cutover.
+
+ 
+
+
+
+
+
+
+   
+ 
+  
+ 
+  
+Finally, we can mark as archived for the Cutover to be complete as below.
+ 
+  
+ 
+ 
+ 
+  
+ 
+
+ 
+4. MGN service using move group and wave: 
+
+This method is used for bulk migration of servers, where a particular group of servers are placed in a move group and then added to different wave.
+
+  
+ 
+  
+  
+  
+ 
+  
+ 
+ Login to source server, run the MGN installer and run the command for replication service to establish communication.
+
+  
+Windows 
+  
+  
+
+
+
+Linux 
+  
+ 
+  
+  
+ 
+  
+  
+Below are the settings that needs to be chosen and choose the servers that needs to be part of the move group.
+
+  
+  
+  
+Below is how the move group is added to wave.
+
+  
+ 
+
+ 
+
+
+ 
+
+
+
+
+
+
+Once added to wave, launch the test instances under Test and Cutover
+
+ 
+  
+ 
+  
+
+
+
+
+
+
+
+
+ Once the test instance is launched, mark it for Ready for testing to proceed with the testing.
+ 
+  
+ 
+  
+ 
+  
+ 
+ 
+ 
+ 
+ 
+Advantages: 
+Multiple migration can be done using Application groups and wave. 
+It is an automated solution which gives a moderate speed.
+
+ 
+Disadvantages: 
+It is agent-based migration service. 
+Replication of data takes time which depends on size of the data. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
