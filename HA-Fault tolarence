@@ -1,0 +1,301 @@
+Organization	TRIANZ
+Project Name 	SMB
+Project Manager 	M. Ranga Naik/M. Nageshwar
+Documented By 	J Praveen Naik
+Date 	09-05-2024
+
+High Availability and Fault Tolerance
+Table of Content:
+1.	High Availability.
+Load Balancer
+	Types Of Load Balancers
+2.	Application Load Balancer.
+	What is Application Load Balancer
+	Target Groups
+3.	Fault Tolerant.
+Auto Scaling. 
+	Auto Scaling Group
+	Launch Template
+	Custom AMI
+	Dynamic Scaling
+	Cloud Watch
+4.	Demo.
+
+ 
+Basic EC2 Instance with one AZ.
+ 
+It’s not a good practice to have only in AZ-A.
+ 
+If Zone 1 is down other Zone should work and this is what we need.
+
+
+
+
+1.	High Availability:
+ 
+What is Load Balancer.
+ Load balancers are one of the crucial components of distributed architecture. They help assign incoming requests to multiple target servers to ensure efficiency and avoid delays and downtimes.
+Types of Load Balancers:
+AWS supports four types of Load balancers:
+ Application Load Balancer.
+ Network Load Balancer.
+ Gateway Load Balancer.
+Classic Load Balancer.
+Application Load Balancer (ALB): A layer 7 load balancer that operates at the application layer of the OSI model and routes traffic based on the content of the request.
+Network Load Balancer (NLB): A layer 4 load balancer that operates at the network layer of the OSI model and routes traffic using information from the IP protocol.
+Gateway Load Balancer (GWLB): A load balancer that distributes traffic across multiple virtual appliances that provide network and security services.
+Classic Load Balancer (CLB): A legacy load balancer that operates at both the application and network layers and provides basic load balancing functionality.
+ 
+2.	Application Load Balancer:
+An Application Load Balancer is a service provided by Amazon Web Services (AWS) that distributes incoming application traffic across multiple targets, such as EC2 instances, in multiple Availability Zones. The load balancer serves as the single point of contact for clients, and you can add one or more listeners to it. The main goal of the load balancer is to improve the availability, scalability, and reliability of applications by fairly distributing network traffic and preventing any one server from becoming overloaded, therefore improving the overall application performance
+
+	Target Group:
+Target groups route requests to individual registered targets, such as EC2 instances, using the protocol and port number that you specify. You can register a target with multiple target groups. You can configure health checks on a per target group basis. Health checks are performed on all targets registered to a target group that is specified in a listener rule for your load balancer.
+
+For more information - Target groups for your Application Load Balancers - Elastic Load Balancing (amazon.com)
+
+3.	Fault Tolerant:
+Fault tolerance in AWS refers to a system’s capacity to continue functioning even if part of the system’s components fails.
+When things go wrong, it should pick-up from where it is stopped.
+
+Auto Scaling:
+AWS Auto Scaling Group is a service that automatically adds or removes cloud compute resources based on certain conditions/scaling policies.
+Launch Templates
+Launch templates (LTs) are newer than launch configurations (LCs) and provide more options to work with. Thus, the AWS documentation recommends use of launch templates (LTs) over launch configuration (LCs)
+Custom AMI
+We use Custom AMI in template which we create.
+Cloud Watch Alarms
+Amazon CloudWatch is a service used for monitoring and observing resources in real-time, built for DevOps engineers, developers, site reliability engineers.
+
+Create High Availability Environment without Load balancer:
+Now we will create a High Available environment without Load Balancer.
+Create a HA Zone in AWS Console.
+	Create VPC. > Name > CIDR > Save
+ 
+This VPC we use for HA & FT.
+ 
+
+	Create Subnet
+We need to create 3 Pub-SN and 3 PVT-SN for HA
+ 
+
+ 
+
+ 
+ 
+
+Click on create SN
+ 
+
+
+	Create Route Table: Pub & Pvt
+ 
+ 
+
+ 
+
+	Create IGW:
+ 
+ 
+
+	Attach the VPC ids to IGW
+IGW > Actions > Attach VPC
+ 
+
+	Edit the Subnet for Enabling Association.
+We need to do this for all Subnets.
+ 
+ 
+
+
+
+	Attach/tag the IGW in Route Table:
+ 
+ 
+We don’t do it for PVT RT, but we have to give NAT Gateway.
+
+	Attach RT to SN
+ 
+ 
+ 
+ 
+
+	Now launch Instance:
+Name: HA-Server-A
+VPC: HA-VPC , Subnet – HA-PUB-SN-A
+SG: HTTP – 80
+Connect with CLI
+Install httpd and Git
+$ sudo yum -y install httpd git
+$ Sudo systemctl start httpd
+$ Sudo systemctl enable httpd
+$ Sudo systemctl status httpd
+ 
+Now clone the ecomm site from git with root doc /var/www/html/
+$ git clone https://github.com/praveenaik008/ecomm.git /var/www/html/
+If we verify with Pub IP the ecomm will work.
+
+But now we need to automate so that other servers will be installed.
+AMIs are the options to do that
+Select the HA-Server-A > Actions > image and template > Create Image
+ 
+ 
+New AMI is created
+ 
+For this AMI snapshot also will be generated.
+ 
+Once the Custom AMI is in Available state, we create B and C Servers with this.
+	Launch Second Server: 
+Name: HA-Server-B
+AMI: Select Custom AMI – HA-AMI
+ 
+
+Edit VPC as HA-VPC and SN-B
+Sg: HA-SSH-HTTP and Launch
+•	Same as B launch C also.
+Check if Ecomm Is running or not.
+Yes, they are working.
+ 
+
+But we cannot say Customer that login through ecomm1.com, 2.com or 3.com.
+For that we have Load Balancer:  which routs traffic to Healthy Server2 when  server1 is down.
+
+Load Balancing:
+ 
+
+ 
+So ELB will take care of Sharing the traffic to B and C when A is down.
+As its keeps on pinging and checks the traffic.
+
+Create High Availability Environment with Load balancer:
+Load Balancing:
+Click and open the Load Balancer and Target groups in AWS Console.
+We need to created Target group and add 3 Instances A, B and C.
+	Create target group
+ 
+Create > Name > Path-“/index.html” > 10 Seconds > Next
+It asks for target instances, select all 3 and click on include
+ 
+
+All are running and click on Create.
+ 
+ 
+This target group is unused.
+ 
+
+	Create Load Balancer.
+ 
+Create > Select ALB
+ 
+Add name: ha-elb
+ 
+
+
+
+
+
+
+Then select VPC and Subnets correctly.
+ 
+Select correct SG and target group
+
+ 
+Now click on create LB.
+ 
+ 
+ 
+If we check the target group it will be attached to ha-elb and Health status will be Healthy
+ 
+ 
+Now we will check the ecomm site by copy and paste elb dns in browser.
+ 
+ 
+Now we will connect to Amazon Linux server-A and make changes in port level.
+$ sudo vi /var/www/html/index.html
+Change the Spring collection to summer collection.
+ 
+	
+If we copy dns and paste in browser it shows Summer instead of spring and then Spring and then Summer.
+As the elb keeps on pinging each server A, B and C
+
+Now we will stop httpd in Server-A
+$ sudo systemctl stop httpd
+Server-A will be unhealthy and Server-B and C will work
+ 
+Once we start the httpd it will be healthy and works fine.
+This is called High Availability.
+============================
+What is Faul Tolerant?
+Terminate all instance A, B, C (which will not happen in real time)
+
+ 
+Now no server will run and it effects our business.
+We will launch new server again with Existing Custom AMI.
+ 
+If we try ecomm site on browser 503 error will come as the target group is empty.
+ 
+Now we should again create the target group with new server and make it healthy and run.
+Once it is healthy ecomm site will run.
+ 
+
+But in Faul tolerance if it detects any down time in Server, it should re-run automatically the unhealthy instance and make it healthy.
+For that we need Server template.
+This is part of Auto Scaling functionality.
+
+Auto Scaling:
+	Create Auto Scaling groups:
+ 
+ 
+Click on Launch Template.
+Name: ha-lt
+Click on AMIs and Custom AMI
+ 
+ 
+Add all except subnet for EC2 subnet is not needed as we can select in autoscaling group.
+	Get back to Auto Scaling group.
+ 
+Now attach the load balancer and Next
+Now mention min and Max instances
+ 
+We have only one instance running and when we turn on Auto Scaling.
+ 
+
+
+It created other 2 instances as below and not more than 5.
+ 
+If some-one accidentally deleted the instances also it never be down.
+Now we will enable the alarms in cloud watch by group level with Auto Scaling group.
+Auto Scaling group > Automatic scaling > create dynamic policy.
+ 
+Type – Step Scaling, Name: scale up.
+Click on create alarm. 
+ 
+Click on Metrics > EC2 > By Autoscaling group > CPU Utilization > Select.
+sNow mention the Threshold as >80% alarm should be sent to SNS topic and NEXT > Next > Create Alarm with Name: CPU
+Now get back to Dynamic scaling policy
+ 
+We need to Add 1 unit if CPU goes up >80 and click on create.
+Dynamic scaling is created.
+ 
+Note: Before we used to check this by installing stress application.
+Now Auto Scaling gave automatic stimulation test.
+Select the policy > Action > Execute.
+ 
+Give above 80% and execute.
+ 
+Now the other instance is started.
+ 
+This is called Fault Tolerant achieved using Auto Scaling.
+
+Refer below link to know about ELB:
+Load Balancer - Elastic Load Balancing (ELB) - AWS (amazon.com)
+Refer below link to Creating Load Balancer using Terraform:
+Managing Application Load Balancer (ALB) with Terraform (spacelift.io)
+aws_lb | Resources | hashicorp/aws | Terraform | Terraform Registry
+Refer Below link to more about Auto Scaling:
+Get started with Amazon EC2 Auto Scaling - Amazon EC2 Auto Scaling
+
+
+Thank you 😊
+
+
