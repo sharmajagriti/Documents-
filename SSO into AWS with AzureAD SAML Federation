@@ -1,0 +1,151 @@
+Organization	TRIANZ
+Project Name 	SMB
+Project Manager 	M.Ranga Naik/M.Nageshwar
+Documented By 	J Praveen Naik
+Date 	08-05-2024
+
+ 
+SSO into AWS with AzureAD SAML Federation from Office 365
+
+Table of contents:s
+1.	What is Azure Active Directory.
+2.	Who uses Active Directory.
+3.	Login to Azure Active Directory.
+4.	Create an AWS enterprise app.
+5.	Download the metadata XML.
+6.	Create user roles for Identity Provider in AWS.
+7.	Create AzureAD user to fetch roles from AWS IAM into Azure AD. (This is Optional and not mandatory)
+8.	Configure Azure Provisioning.
+9.	Assign roles to users.
+10.	Login using the AWS Icon from office 365.
+
+1.	What is Azure Active Directory.
+Azure Active Directory (Azure AD) is a service for managing identities and access in the cloud. This solution facilitates access to thousands of additional SaaS applications, the Azure portal, and external resources like Microsoft 365 for your staff members. They can also access internal resources like apps on your business intranet network and any cloud apps created by your own company thanks to Azure Active Directory. You can also maintain your on-premises Active Directory implementation with the assistance of Azure AD. Simply explained, Azure AD enables users to sign up for various services and access them from any location via the cloud using a single username and password.
+2.	Who Uses Active Directory?
+1.	IT administrators: Based on their organizational needs, administrators can utilize Azure AD to manage access to applications and Azure resources.
+2.	Developers: With the help of Azure AD, developers may add functionality to the applications they create, such as SSO capability.
+3.	Users: The ability to maintain identities and perform maintenance tasks like self-service password reset is provided to users.
+4.	Online Service Subscribers: Azure AD is already being used by Microsoft 365 online subscribers to log into their accounts.
+
+How to Configure Single Sign-On into AWS/GCP from Active Directory.
+In this post, I will describe, step-by-step, how to use your existing Office365 credentials to login to your AWS account, and how to assign AWS permissions to your current Office 365 users. I’m assuming you already have (1) an Office 365 subscription and (2) an AWS account.
+3. Login to Azure Active Directory
+a) In Office 365, click on the dots in the corner and select Admin.
+ 
+b) Select Azure Active Directory under Admin Centers
+ 
+c) In the Azure Portal, select Azure Active Directory. Alternatively, you can type https://aad.portal.azure.com/ in your browser to access the Azure Active Directory directly.
+ 
+
+4. Create an AWS enterprise app.
+a) Select Enterprise applications in the left menu
+ 
+b) Click on + New Application in the main panel.
+ 
+c) Type Amazon Web Services under “Add from the gallery” then select Amazon Web Services (AWS)
+ 
+d) Click on Add
+
+5. Download the metadata XML
+a) Click on 2. Set up single sign on
+ 
+ 
+b) Select SAML as the authentication method
+c) Under 3. SAML Signing Certificate, click on Federation Metadata XML > Download and save the file as metadata.xml.
+ 
+6. Create user roles for Identity Provider in AWS
+For this demonstration, we will create a SuperAdmin role with full administrator permission and read.Only role with read only permission. Feel free to take different roles with other permissions as you see fit.
+a) Login into AWS and navigate to IAM
+ 
+b) In the left menu, click on Identity Providers
+ 
+c) Click on Create Provider, select SAML as the provider type, enter any name, and select metadata.xml for the metadata document. Then click Next Step and Create
+ 
+¬ 
+ 
+
+New Identity provider is created.
+ 
+d) In the left menu, select Roles, then Create role. For our admin role, we would select SAML 2.0 federation, and the provider created in step c) with Programmatic and console access. Then Next: Permissions, select Administrator Access, then Next: Tags, then Next: Review. Finally, we name the role as SuperAdmin and select Create role.
+e) For our reader role, we create another role with SAML 2.0 federation, Programmatic and console access, the ViewOnlyAccess policy, and we name the role azure.reader.
+
+7. Create AzureAD user to fetch roles from AWS IAM into Azure AD. (This is Optional and not mandatory)
+a) In IAM, select Users in the left menu, then Add User.
+ 
+b) Enter AzureAD/AD-Provision-Key as the username, and select Programmatic Access. Click Next:Permissions, then Next:Tags, then Next:Review, and finally Create user. You should receive a warning that this user has no permissions.
+ 
+
+c) Copy the Access key ID, and the Secret access key shown after creating the user.
+ 
+d) Go back to IAM > Users > AzureAAD/AD-Provision-Key, 
+ 
+then click on the Permissions tab, and + Add Inline Policy. Give name for Policy and Save
+ 
+In the JSON tab, copy the following policy, then click Review Policy, name the policy AzureAAD.Policy and click Create Policy.
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": "iam:ListRoles",
+            "Resource": "*"
+        }
+    ]
+}
+ 
+
+The AzureAD user created with Inline policy with Action: “iam:ListRoles” so that this roles will reflect in Azure add for adding them to Users who already available in Azure Ad user management.
+
+ 
+8. Configure Azure Provisioning.
+a) In Azure Active Directory > Enterprise Applications > Amazon Web Services, click on Provisioning, and on Get Started.
+b) Select Automatic as the Provisioning Mode, then enter the Access key ID and secret access key from the AzureAAD/AD-Provisioning-Key user as the clientsecret and secret token. Click on Test Connection to validate the credentials. Finally click on Save.
+Creating the User for Access Key and Secret Access Key .
+Login into AWS > IAM > Users > Create User and after creating.
+Create Access Key as below
+ 
+ 
+Click on Create access key
+ 
+ 
+Now use this Access key and Secret Access key in AD provisioning tab as above mentioned.
+ 
+Note:  We saved the Access key and Secret access key so that we can use it for provisioning AD and AWS.
+
+We will get back to Azure AD:
+Now we will login into Microsoft Entra Admin Center Azure AD > Applications > Enterprise applications
+> AWS Single-Account > Provisioning
+ 
+Click on Edit Provision
+ 
+
+Add the Admin Credentials.
+clientsecret = Access Key
+Secret Token = Secret access key
+ 
+Add and Test Connection
+ 
+
+
+
+But it is showing that Test Failed due to wrong credentials.
+ 
+
+c) Click on Provisioning in the left menu, then select Start Provisioning.
+d) After several minutes, you should see roles being imported. If this doesn’t work, edit the provisioning and toggle the status to Off, then On, then click refresh.
+
+9. Assign roles to users
+a) In Azure Active Directory > Enterprise Applications > Amazon Web Services, click on Users and groups, and then on +Add user.
+b) Select the user who can log in to AWS and one of the roles the user can assume. To add another role to the same user, click on add user again and select the second role.
+ 
+ 
+Note: If you only see the Default Access role, try adding yourself as the application owner and disable/re-enable the provisioning, and refresh its status. It can take several minutes for it to work. Don’t forget to remove yourself as an application owner afterwards.
+10. Login using the AWS Icon from office 365.
+a) Assigned user should be able to login using the AWS icon on their dashboard
+ 
+b) If multiple roles have been assigned to them, they will have multiple options to decide which role to use when they login.
+ 
+ 
+
+
+
