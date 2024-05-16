@@ -1,0 +1,184 @@
+
+Statement of Confidentiality
+
+The information contained in this document is confidential to Trianz. It shall not be disclosed, duplicated, or used for any purpose other than that stated herein, in whole or in part, without the express written consent of Trianz.
+
+
+
+
+Document Control
+
+
+Owner	Devender Banne	Release ID	Initial Release
+Effective Date	5/15/2024	Version	1
+
+
+
+
+
+
+Document History
+
+Version	Date	Details
+1	5/15/2024	Initial Draft
+		
+		
+		
+
+	
+ 
+Table of Contents
+GLOSSARY	3
+1.	EXECUTIVE SUMMARY	4
+ABOUT THIS DOCUMENT	4
+ABOUT TRIANZ	4
+2.	OTHER SECTIONS	4
+
+1.Pre-Requisites	
+2.Joining Windows server to domain	
+3. Joining Ubuntu Server to domain	
+4. Joining Redhat server to domain	
+5. Joining CentOS server to domain	
+
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+1.	Executive Summary
+
+About this document
+
+Microsoft Active Directory is extensively used in organizations for user & computer authentication and applying control policies called Group policies to Secure and make the environment compliant.
+
+In this document we draft the procedures to join servers running different OS versions to a Microsoft Active Directory domain.
+
+
+About Trianz
+
+Welcome to Trianz Digital Consulting Pvt. Ltd., also referred to as Trianz. Trianz is a unique place to work is the set of values that we bring to our client-facing efforts and the way in ,which we interact with our teammates. Our values and culture are what set us apart from our competitors. We work at a fast pace, do whatever it takes to build a successful IT Services and consulting firm, and deliver on our client commitments. Amidst all this activity, it can be easy to lose track of our foundation - our Company’s core values. To ensure that we remain focused, we must pause periodically to examine our values from time to time. 
+Trianz is a digital transformation technology & services firm that helps clients transform their value proposition and business value chain. We do help clients understand their competitive digital maturity, develop effective strategies, and transform with our IP/platforms and technology services.
+Our Approach is Unique, we lead with data and IP that accelerates digital transformations, optimizes investments and delivers measurable results. We have been rated #1 for ‘transformational impact’ and ‘predictability of execution’ by a Fortune 1000 client base- 5 years in a row.
+ 
+
+
+1.Pre-Requisites:
+o	A Windows server running functioning as a Domain controller running MS Active Directory
+o	A functional DNS server either hosting or containing DNS records of all the required AD servers, services and the clients to be using this DNS server for name resolution
+o	A user account with permissions to join the servers to the domain
+o	Network ports, LDAP queries happen on port 389, Kerberos 88, RPC 135,139 SMB 445, DNS 53,  Refer Link for full list of ports required
+o	While no additional packages are required for Windows Operating Systems, Open systems require additional packages to be installed on the machines for enabling communication.
+
+         
+ 
+
+2.	Joining Windows server to AD Domain
+
+1.	Login to the Client server that needs to be joined to the domain with an administrator account
+2.	If not already, change the DNS server to that of the one that contains the Domain DNS records, ping the domain to validate you can resolve the domain name.
+3.	Open a Command prompt as an administrator and type sysdm.cpl
+ 
+4.	On the sysdm.cpl applet, click on change, and select the ‘Domain’ radio buttom and enter the domain name, ex- trianz.com, click ok
+   
+5.	Enter the Domain account credentials which have permissions to join the server to the domain, click ok
+ 
+6.	The server will ask for a reboot, once the reboot is completed you can logon to the server using domain credentials provided the account has logon privileges to the server.
+
+
+3.	Joining Ubuntu server to AD Domain
+
+1.	Login to the Client server that needs to be joined to the domain with an root account and switch to sudo
+2.	If not already, change the DNS server to that of the one that contains the Domain DNS records, ping the domain to validate you can resolve the domain name.
+3.	Update the DNS servers by editing the /etc/resolv.conf  and adding DNS server ip in the format ‘nameserver <8.8.8.8> 
+ 
+4.	Update the /etc/hosts file with the domain name, Domain controller and IP in the below format
+<IP Address> <FQDN of the server> <server name>
+<IP Address> <primarykrb.<domainname>> primarykrb
+<IP Address> <primarydc.<domainname>> primarydc
+<IP Address> <domainname>
+ 
+5.	set the rdns value to false in the /etc/krbt5.conf file 
+ 
+6.	To be able to use the logon names without using the domain name update the file /etc//sssd/sssd.conf and set the value to false
+ 
+7.	Restart the sssd service; systemctl sssd
+8.	Install the required packages using “apt -y install realmd sssd sssd-tools libnss-sss libpam-sss adcli samba-common-bin oddjob oddjob-mkhomedir packagekit resolvconf”  Note: you might need to run ‘apt update’ before running this command
+9.	You can see if the domain is reachable using the command, ‘realm discover <domainname>’
+10.	Join the server to the domain using the command, “ realm join -v -U username@domain.com <domainname>”
+ 
+11.	Edit the SSH config at /etc/ssh/sshd.config to allow authentication with username/password. Ensure the values are as below
+ 
+ 
+ 
+12.	Restart the SSH service, ‘systemctl restart ssh’
+13.	You can test logon with domain username and password using ssh username@host address and password
+
+4.	Joining Redhat server to AD Domain
+
+1.	Login to the Client server that needs to be joined to the domain with an root account and switch to sudo
+2.	If not already, change the DNS server to that of the one that contains the Domain DNS records, ping the domain to validate you can resolve the domain name.
+3.	Update the DNS servers by editing the /etc/resolv.conf  and adding DNS server ip in the format ‘nameserver <8.8.8.8> 
+ 
+4.	Update the /etc/hosts file with the domain name, Domain controller and IP in the below format
+<IP Address> <FQDN of the server> <server name>
+<IP Address> <primarykrb.<domainname>> primarykrb
+<IP Address> <primarydc.<domainname>> primarydc
+<IP Address> <domainname>
+ 
+5.	set the rdns value to false in the /etc/krbt5.conf file 
+ 
+6.	To be able to use the logon names without using the domain name update the file /etc//sssd/sssd.conf and set the value to false
+ 
+7.	Restart the sssd service; systemctl sssd
+8.	Install the required packages using “apt -y install realmd sssd sssd-tools libnss-sss libpam-sss adcli samba-common-bin oddjob oddjob-mkhomedir packagekit resolvconf”  Note: you might need to run ‘apt update’ before running this command
+9.	You can see if the domain is reachable using the command, ‘realm discover <domainname>’
+10.	Join the server to the domain using the command, “ realm join -v -U username@domain.com <domainname>”
+ 
+11.	Edit the SSH config at /etc/ssh/sshd.config to allow authentication with username/password. Ensure the values are as below
+ 
+ 
+ 
+12.	Restart the SSH service, ‘systemctl restart ssh’
+13.	You can test logon with domain username and password using ssh username@host address and password
+
+5.	Joining CentOS server to AD Domain
+
+1.	Login to the Client server that needs to be joined to the domain with an root account and switch to sudo
+2.	If not already, change the DNS server to that of the one that contains the Domain DNS records, ping the domain to validate you can resolve the domain name.
+3.	Update the DNS servers by editing the /etc/resolv.conf  and adding DNS server ip in the format ‘nameserver <8.8.8.8> 
+ 
+4.	Update the /etc/hosts file with the domain name, Domain controller and IP in the below format
+<IP Address> <domainname> 
+5.	To be able to use the logon names without using the domain name update the file /etc//sssd/sssd.conf and set the value to false
+ 
+6.	Restart the sssd service; systemctl sssd, systemctl daemon-reload
+7.	Install the required packages using “yum install sssd realmd oddjob oddjob-mkhomedir adcli samba-common samba-common-tools krb5-workstation openldap-clients policycoreutils-python”  Note: you might need to run ‘yum update’ before running this command
+8.	Join the server to the domain using the command, “ realm join - -user username@domain.com <domainname>”
+9.	You can test logon with domain username and password using ssh username@host address and password
+                                                                                                                     
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
